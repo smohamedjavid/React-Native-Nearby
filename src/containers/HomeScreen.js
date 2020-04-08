@@ -6,9 +6,10 @@ import {
   SafeAreaView,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import {Dark} from '../MapStyles';
 import URL from '../config/endpoints';
 import BottomDrawer from '../components/bottomDrawer/BottomDrawer';
@@ -38,7 +39,7 @@ class HomeScreen extends React.Component {
       maximumDistance: 10,
       scooters: [],
       region: {
-        latitude: 3.20,
+        latitude: 3.2,
         longitude: 103.4,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
@@ -46,7 +47,7 @@ class HomeScreen extends React.Component {
     };
   }
 
-  getScooters() {
+  getScooters(initialCoordinates) {
     const {maximumDistance, numberOfScooters, coordinates} = this.state;
     fetch(URL.getNearbyScooters, {
       method: 'POST',
@@ -55,7 +56,7 @@ class HomeScreen extends React.Component {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        coordinates: coordinates,
+        coordinates: initialCoordinates || coordinates,
         numberOfScooters: numberOfScooters,
         maxDistance: maximumDistance * 1000,
       }),
@@ -63,10 +64,13 @@ class HomeScreen extends React.Component {
       .then((response) => response.json())
       .then((json) => {
         console.log('response----->', json);
-        this.setState({scooters: json.scooters ? json.scooters : []}, () => {
-          this.drawer.closeBottomDrawer();
-          this.map.fitToElements(true);
-        });
+        this.setState(
+          {scooters: json.scooters ? json.scooters : this.state.scooters},
+          () => {
+            this.drawer.closeBottomDrawer();
+            this.map.fitToElements(true);
+          },
+        );
       })
       .catch((error) => {
         console.error(error);
@@ -78,31 +82,32 @@ class HomeScreen extends React.Component {
     if (hasLocationPermission) {
       Geolocation.getCurrentPosition(
         (position) => {
-          // alert(JSON.stringify(position.coords));
           const region = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             latitudeDelta: LATITUDE_DELTA,
             longitudeDelta: LONGITUDE_DELTA,
           };
+          const coordinates = [
+            position.coords.longitude,
+            position.coords.latitude,
+          ];
           this.setState(
             {
               region,
-              coordinates: [
-                position.coords.longitude,
-                position.coords.latitude,
-              ],
+              coordinates,
             },
             () => {
+              this.getScooters(coordinates);
               this.map.animateToRegion(region, 10);
-              this.getScooters();
             },
           );
         },
         (error) => {
           console.log(error.code, error.message);
+          Alert.alert('', error.message);
         },
-        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        {enableHighAccuracy: true, timeout: 5000, maximumAge: 10000},
       );
     }
   }
@@ -134,9 +139,7 @@ class HomeScreen extends React.Component {
               //   setTimeout(() => this.drawer.closeBottomDrawer(), 200),
               // );
               this.drawer.closeBottomDrawer();
-            }}
-            // initialRegion={this.state.region}
-          >
+            }}>
             {scooters.map((marker) => {
               return (
                 <Marker
