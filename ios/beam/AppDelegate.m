@@ -28,7 +28,7 @@ static void InitializeFlipper(UIApplication *application) {
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-   [GMSServices provideAPIKey:@"AIzaSyCmQQkTsQjLZ0nkk0VvTSwvb3_8rilbyVE"];
+   [GMSServices provideAPIKey:@"YOUR_GOOGLE_MAPS_API_KEY"];
 #if DEBUG
   InitializeFlipper(application);
 #endif
