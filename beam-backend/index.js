@@ -10,7 +10,7 @@ const port = process.env.PORT || "8000";
 app.use(bodyParser.json());
 
 mongoose.connect(
-  "mongodb://awxecrvtbynum_14898:awxecrvtbynum_14898@ds119738.mlab.com:19738/heroku_mkb6dw1z",
+  "YOUR_MONGO_DB_SERVER_URL",
   { useUnifiedTopology: true, useNewUrlParser: true },
   (err) => {
     if (err) console.log("error connecting to db");
